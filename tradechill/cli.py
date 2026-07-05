@@ -1,6 +1,7 @@
 """CLI entry point for TradeChill.
 
-Defines all Typer command groups and commands with Rich-formatted output.
+Defines all Typer commands with Rich-formatted output.
+Uses sub-Typer instances for command grouping.
 """
 
 from typing import Optional
@@ -10,13 +11,12 @@ from rich.table import Table
 from rich.panel import Panel
 from rich import box
 from rich.text import Text
-from rich.progress import Progress, BarColumn, TextColumn, TimeRemainingColumn
+from rich.progress import Progress, BarColumn, TextColumn
 from datetime import datetime
 
 from . import db, portfolio, impulse, cooldown, review, trap_detector, dashboard
 from .utils import (
     EMOTIONS,
-    DIRECTIONS,
     format_currency,
     format_percent,
     EMOTION_COOLDOWN_MAP,
@@ -46,13 +46,11 @@ def handle_error(e: Exception) -> None:
 
 # ─── Portfolio Commands ──────────────────────────────────────────────
 
-
-@app.group()
-def portfolio_cmd():
-    """管理投资组合"""
+portfolio_app = typer.Typer(help="管理投资组合")
+app.add_typer(portfolio_app, name="portfolio")
 
 
-@portfolio_cmd.command("add")
+@portfolio_app.command("add")
 def portfolio_add(
     code: str = typer.Argument(..., help="股票代码，如 600519"),
     name: str = typer.Argument(..., help="股票名称，如 贵州茅台"),
@@ -70,7 +68,7 @@ def portfolio_add(
         handle_error(e)
 
 
-@portfolio_cmd.command("list")
+@portfolio_app.command("list")
 def portfolio_list():
     """显示所有持仓"""
     try:
@@ -117,7 +115,7 @@ def portfolio_list():
         handle_error(e)
 
 
-@portfolio_cmd.command("remove")
+@portfolio_app.command("remove")
 def portfolio_remove(
     id: int = typer.Argument(..., help="持仓ID"),
 ):
@@ -132,7 +130,7 @@ def portfolio_remove(
         handle_error(e)
 
 
-@portfolio_cmd.command("update")
+@portfolio_app.command("update")
 def portfolio_update(
     id: int = typer.Argument(..., help="持仓ID"),
     cost_price: Optional[float] = typer.Option(None, "--cost-price", "-c", help="新成本价"),
@@ -151,13 +149,11 @@ def portfolio_update(
 
 # ─── Impulse Commands ────────────────────────────────────────────────
 
-
-@app.group()
-def impulse():
-    """管理交易冲动记录"""
+impulse_app = typer.Typer(help="管理交易冲动记录")
+app.add_typer(impulse_app, name="impulse")
 
 
-@impulse.command("record")
+@impulse_app.command("record")
 def impulse_record(
     direction: str = typer.Argument(..., help="交易方向: buy/sell"),
     code: str = typer.Argument(..., help="股票代码"),
@@ -189,7 +185,7 @@ def impulse_record(
         handle_error(e)
 
 
-@impulse.command("list")
+@impulse_app.command("list")
 def impulse_list(
     status: Optional[str] = typer.Option(
         None, "--status", "-s",
@@ -245,13 +241,11 @@ def impulse_list(
 
 # ─── Cooldown Commands ───────────────────────────────────────────────
 
-
-@app.group()
-def cooldown_cmd():
-    """管理冷静期"""
+cooldown_app = typer.Typer(help="管理冷静期")
+app.add_typer(cooldown_app, name="cooldown")
 
 
-@cooldown_cmd.command("start")
+@cooldown_app.command("start")
 def cooldown_start(
     impulse_id: int = typer.Argument(..., help="冲动记录ID"),
 ):
@@ -266,7 +260,7 @@ def cooldown_start(
         handle_error(e)
 
 
-@cooldown_cmd.command("status")
+@cooldown_app.command("status")
 def cooldown_status():
     """显示进行中的冷静期状态"""
     try:
@@ -316,7 +310,7 @@ def cooldown_status():
         handle_error(e)
 
 
-@cooldown_cmd.command("list")
+@cooldown_app.command("list")
 def cooldown_list():
     """查看冷静期历史"""
     try:
@@ -359,13 +353,11 @@ def cooldown_list():
 
 # ─── Trap Detection Commands ─────────────────────────────────────────
 
-
-@app.group()
-def traps():
-    """行为金融学陷阱检测"""
+traps_app = typer.Typer(help="行为金融学陷阱检测")
+app.add_typer(traps_app, name="traps")
 
 
-@traps.command("check")
+@traps_app.command("check")
 def traps_check():
     """执行陷阱检测分析"""
     try:
@@ -378,12 +370,15 @@ def traps_check():
         if risk_level == "high":
             icon = "🔴"
             style = "bold red"
+            border_color = "red"
         elif risk_level == "medium":
             icon = "🟡"
             style = "bold yellow"
+            border_color = "yellow"
         else:
             icon = "🟢"
             style = "bold green"
+            border_color = "green"
 
         summary = (
             f"[{style}]风险等级: {icon} {risk_level.upper()}[/{style}]\n"
@@ -405,7 +400,7 @@ def traps_check():
             Panel(
                 summary + traps_text,
                 title=f"{icon} 行为陷阱检测报告",
-                border_style=risk_level,
+                border_style=border_color,
                 box=box.ROUNDED,
             )
         )
@@ -413,7 +408,7 @@ def traps_check():
         handle_error(e)
 
 
-@traps.command("history")
+@traps_app.command("history")
 def traps_history():
     """查看历史检测报告"""
     try:
@@ -456,13 +451,11 @@ def traps_history():
 
 # ─── Review Commands ─────────────────────────────────────────────────
 
-
-@app.group()
-def review_cmd():
-    """冷静期后复盘"""
+review_app = typer.Typer(help="冷静期后复盘")
+app.add_typer(review_app, name="review")
 
 
-@review_cmd.command("pending")
+@review_app.command("pending")
 def review_pending():
     """列出待复盘的冲动记录"""
     try:
@@ -503,7 +496,7 @@ def review_pending():
         handle_error(e)
 
 
-@review_cmd.command("do")
+@review_app.command("do")
 def review_do(
     impulse_id: int = typer.Argument(..., help="冲动记录ID"),
     final_decision: str = typer.Option(
@@ -535,7 +528,7 @@ def review_do(
         handle_error(e)
 
 
-@review_cmd.command("compare")
+@review_app.command("compare")
 def review_compare():
     """对比冲动时与冷静后的收益差异"""
     try:

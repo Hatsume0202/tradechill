@@ -120,15 +120,19 @@ def fetch_one(sql: str, params: tuple = ()) -> Optional[dict]:
 
 
 def execute(sql: str, params: tuple = ()) -> int:
-    """Execute a write query and return the lastrowid.
+    """Execute a write query and return affected row info.
+
+    For INSERT, returns the last inserted row ID.
+    For UPDATE/DELETE, returns the number of affected rows.
 
     Args:
         sql: SQL query string.
         params: Query parameters tuple.
 
     Returns:
-        The row ID of the last inserted row, or 0 for other queries.
+        The row ID of the last inserted row, or the number of
+        affected rows for other queries.
     """
     with get_connection() as conn:
         cursor = conn.execute(sql, params)
-        return cursor.lastrowid or 0
+        return cursor.lastrowid if cursor.lastrowid else cursor.rowcount
