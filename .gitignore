@@ -34,3 +34,7 @@ venv/
 Thumbs.db
 # Project
 *.db
+# Development artifacts
+.superpowers/
+*.db
+docs/superpowers/
