@@ -1,8 +1,6 @@
 """Utility functions and shared constants for TradeChill."""
 
-import os
 from pathlib import Path
-from typing import Optional
 import random
 
 
@@ -34,8 +32,8 @@ def get_db_path() -> str:
 def random_price(cost_price: float, max_variation: float = 0.1) -> float:
     """Generate a simulated current price around the cost price.
 
-    Uses a random walk from cost price within +/- max_variation range,
-    weighted slightly toward a small drift.
+    Applies a uniform random variation within +/- max_variation of the
+    cost price to simulate a plausible current market price.
 
     Args:
         cost_price: The base cost price of the holding.
